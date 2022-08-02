@@ -64,6 +64,7 @@ HardwareInterface::HardwareInterface()
   , joint_positions_{ { 0, 0, 0, 0, 0, 0 } }
   , joint_velocities_{ { 0, 0, 0, 0, 0, 0 } }
   , joint_efforts_{ { 0, 0, 0, 0, 0, 0 } }
+  , external_joint_torques_{ { 0, 0, 0, 0, 0, 0 } }
   , standard_analog_input_{ { 0, 0 } }
   , standard_analog_output_{ { 0, 0 } }
   , joint_names_(6)
@@ -85,6 +86,8 @@ bool HardwareInterface::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_hw
 {
   joint_velocities_ = { { 0, 0, 0, 0, 0, 0 } };
   joint_efforts_ = { { 0, 0, 0, 0, 0, 0 } };
+  external_joint_torques_ = { { 0, 0, 0, 0, 0, 0 } };
+
   std::string script_filename;
   std::string wrench_frame_id;
   std::string output_recipe_filename;
@@ -334,8 +337,10 @@ bool HardwareInterface::init(ros::NodeHandle& root_nh, ros::NodeHandle& robot_hw
   {
     ROS_DEBUG_STREAM("Registering handles for joint " << joint_names_[i]);
     // Create joint state interface for all joints
+    //js_interface_.registerHandle(hardware_interface::JointStateHandle(joint_names_[i], &joint_positions_[i],
+    //                                                                  &joint_velocities_[i], &joint_efforts_[i]));
     js_interface_.registerHandle(hardware_interface::JointStateHandle(joint_names_[i], &joint_positions_[i],
-                                                                      &joint_velocities_[i], &joint_efforts_[i]));
+                                                                      &joint_velocities_[i], &external_joint_torques_[i]));
 
     // Create joint position control interface
     pj_interface_.registerHandle(
@@ -530,6 +535,14 @@ void HardwareInterface::read(const ros::Time& time, const ros::Duration& period)
     readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
     readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+
+    // read joint torques that are computed and stored in output registers in ros_control.urscript
+    readData(data_pkg, "output_double_register_0", external_joint_torques_[0]);
+    readData(data_pkg, "output_double_register_1", external_joint_torques_[1]);
+    readData(data_pkg, "output_double_register_2", external_joint_torques_[2]);
+    readData(data_pkg, "output_double_register_3", external_joint_torques_[3]);
+    readData(data_pkg, "output_double_register_4", external_joint_torques_[4]);
+    readData(data_pkg, "output_double_register_5", external_joint_torques_[5]);
 
     cart_pose_.position.x = tcp_pose_[0];
     cart_pose_.position.y = tcp_pose_[1];
@@ -727,6 +740,7 @@ void HardwareInterface::write(const ros::Time& time, const ros::Duration& period
       ur_driver_->writeJointCommand(cartesian_pose_command_, urcl::comm::ControlMode::MODE_POSE);
     }
     else
+
     {
       ur_driver_->writeKeepalive();
     }

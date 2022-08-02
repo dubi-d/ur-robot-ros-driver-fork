@@ -274,6 +274,7 @@ protected:
   urcl::vector6d_t target_joint_positions_;
   urcl::vector6d_t target_joint_velocities_;
   urcl::vector6d_t joint_efforts_;
+  urcl::vector6d_t external_joint_torques_;
   urcl::vector6d_t fts_measurements_;
   urcl::vector6d_t tcp_pose_;
   urcl::vector6d_t tcp_speed_;

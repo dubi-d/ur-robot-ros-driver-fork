@@ -99,7 +99,7 @@ thread speedThread():
   textmsg("ExternalControl: Starting speed thread")
   while control_mode == MODE_SPEEDJ:
     qd = cmd_servo_qd
-    speedj(qd, 40.0, steptime)
+    speedj(qd, 5.0, steptime)
   end
   textmsg("ExternalControl: speedj thread ended")
   stopj(5.0)
